@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App Shop</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .product {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .product img {
+            max-width: 100px;
+            border-radius: 5px;
+        }
+
+        .product-info {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .product-info h3 {
+            margin: 0;
+        }
+
+        .product-info p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .buy-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .buy-button:hover {
+            background-color: #45a049;
+        }
+
+        .admin-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .admin-section input {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .admin-section button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .admin-section button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Telegram Shop</h1>
+    </header>
+
+    <div class="container">
+        <div id="products">
+            <!-- Prodotti saranno caricati qui -->
+        </div>
+
+        <div class="admin-section" id="admin-section">
+            <h2>Sezione Admin</h2>
+            <input type="text" id="product-name" placeholder="Nome prodotto">
+            <input type="text" id="product-description" placeholder="Descrizione prodotto">
+            <input type="number" id="product-price" placeholder="Prezzo prodotto">
+            <button onclick="addProduct()">Aggiungi Prodotto</button>
+        </div>
+
+        <div id="login-section">
+            <h2>Accesso Admin</h2>
+            <input type="text" id="admin-username" placeholder="Nome utente">
+            <input type="password" id="admin-password" placeholder="Password">
+            <button onclick="loginAdmin()">Accedi</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const products = [
+            { id: 1, name: "Quadrifoglio", description: "Aumenta il tuo guadagno!", price: 50, image: "https://via.placeholder.com/100" },
+            { id: 2, name: "Acqua x64", description: "Acqua che ti disseta", price: 20, image: "https://via.placeholder.com/100" }
+        ];
+
+        const adminCredentials = {
+            username: "admin",
+            password: "password123"
+        };
+
+        const adminSection = document.getElementById("admin-section");
+        const loginSection = document.getElementById("login-section");
+
+        function renderProducts() {
+            const productsDiv = document.getElementById("products");
+            productsDiv.innerHTML = "";
+            products.forEach(product => {
+                const productDiv = document.createElement("div");
+                productDiv.classList.add("product");
+                productDiv.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>${product.price} punti</strong></p>
+                    </div>
+                    <button class="buy-button" onclick="buyProduct(${product.id})">Compra</button>
+                `;
+                productsDiv.appendChild(productDiv);
+            });
+        }
+
+        function buyProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            tg.sendData(JSON.stringify({ action: "buy", product }));
+            alert(`Hai comprato ${product.name} per ${product.price} punti!`);
+        }
+
+        function loginAdmin() {
+            const username = document.getElementById("admin-username").value;
+            const password = document.getElementById("admin-password").value;
+
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                loginSection.style.display = "none";
+                adminSection.style.display = "block";
+                alert("Accesso Admin effettuato con successo!");
+            } else {
+                alert("Nome utente o password errati.");
+            }
+        }
+
+        function addProduct() {
+            const name = document.getElementById("product-name").value;
+            const description = document.getElementById("product-description").value;
+            const price = parseInt(document.getElementById("product-price").value, 10);
+
+            if (name && description && price) {
+                const newProduct = {
+                    id: products.length + 1,
+                    name,
+                    description,
+                    price,
+                    image: "https://via.placeholder.com/100"
+                };
+                products.push(newProduct);
+                renderProducts();
+                alert("Prodotto aggiunto con successo!");
+            } else {
+                alert("Compila tutti i campi per aggiungere un prodotto.");
+            }
+        }
+
+        renderProducts();
+    </script>
+</body>
+</html>
