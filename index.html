@@ -1,4 +1,4 @@
-H7<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -97,6 +97,280 @@ H7<!DOCTYPE html>
             padding: 10px;
             margin: 15px 0;
             border-radius: 5px;
-          
+            background-color: #e9f7ef;
+            color: #155724;
+            display: none;
+        }
 
+        .search-bar {
+            margin-top: 20px;
+        }
 
+        .review-section {
+            margin-top: 20px;
+        }
+
+        .review {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Duro Store</h1>
+    </header>
+
+    <div class="container my-4">
+        <!-- Success message -->
+        <div id="success-message" class="message">
+            Operation successful!
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="search" class="form-control" placeholder="Search for products..." onkeyup="searchProducts()">
+        </div>
+
+        <!-- Categories -->
+        <div id="categories">
+            <button class="btn btn-secondary category-btn" onclick="filterCategory('Electronics')">Electronics</button>
+            <button class="btn btn-secondary category-btn" onclick="filterCategory('Clothing')">Clothing</button>
+            <button class="btn btn-secondary category-btn" onclick="filterCategory('Accessories')">Accessories</button>
+        </div>
+
+        <!-- Products -->
+        <div id="products">
+            <!-- Products will be dynamically rendered here -->
+        </div>
+
+        <!-- Cart Section -->
+        <div class="cart-section" id="cart-section">
+            <h2>Your Cart</h2>
+            <div id="cart-items">
+                <!-- Cart items will be rendered here -->
+            </div>
+            <div id="cart-total">
+                <strong>Total: 0 points</strong>
+            </div>
+            <button class="btn btn-success" onclick="checkout()">Checkout</button>
+        </div>
+
+        <!-- Review Section -->
+        <div class="review-section" id="review-section">
+            <h2>Product Reviews</h2>
+            <div id="reviews">
+                <!-- Reviews will be rendered here -->
+            </div>
+            <textarea id="review-text" class="form-control" placeholder="Write a review..." rows="3"></textarea>
+            <button class="btn btn-primary" onclick="addReview()">Submit Review</button>
+        </div>
+
+        <!-- Admin Section -->
+        <div class="admin-section" id="admin-section" style="display: none;">
+            <h2>Admin Panel</h2>
+            <h4>Recharge Customer Balance</h4>
+            <input type="number" id="recharge-amount" placeholder="Amount to recharge" class="form-control">
+            <button class="btn btn-primary" onclick="rechargeBalance()">Recharge</button>
+            <h4>Add a New Product</h4>
+            <input type="text" id="new-product-name" class="form-control" placeholder="Product name">
+            <input type="text" id="new-product-category" class="form-control" placeholder="Category">
+            <input type="number" id="new-product-price" class="form-control" placeholder="Price">
+            <input type="file" id="new-product-image" class="form-control">
+            <button class="btn btn-success" onclick="addNewProduct()">Add Product</button>
+        </div>
+
+        <!-- Admin Login -->
+        <div class="admin-section" id="login-section">
+            <h2>Admin Login</h2>
+            <input type="text" id="junior_duro" placeholder="Username" class="form-control">
+            <input type="password" id="Aranvir2009!" placeholder="Password" class="form-control">
+            <button class="btn btn-success" onclick="loginAdmin()">Login</button>
+        </div>
+    </div>
+
+    <script>
+        const adminCredentials = { username: "junior_duro", password: "Aranvir2009!" };
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let userBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
+        let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+
+        // Render products
+        function renderProducts(filteredProducts = products) {
+            const productsDiv = document.getElementById("products");
+            productsDiv.innerHTML = "";
+            filteredProducts.forEach(product => {
+                const productDiv = document.createElement("div");
+                productDiv.classList.add("product");
+                productDiv.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>${product.price} points</strong></p>
+                    </div>
+                    <button class="buy-button" onclick="addToCart(${product.id})">Add to Cart</button>
+                `;
+                productsDiv.appendChild(productDiv);
+            });
+        }
+
+        // Filter products by category
+        function filterCategory(category) {
+            const filteredProducts = products.filter(product => product.category === category);
+            renderProducts(filteredProducts);
+        }
+
+        // Search products by name
+        function searchProducts() {
+            const searchTerm = document.getElementById("search").value.toLowerCase();
+            const filteredProducts = products.filter(product => 
+                product.name.toLowerCase().includes(searchTerm)
+            );
+            renderProducts(filteredProducts);
+        }
+
+        // Add product to cart
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const cartItem = cart.find(item => item.id === productId);
+            
+            if (cartItem) {
+                cartItem.quantity++;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            saveCart();
+            renderCart();
+        }
+
+        // Remove product from cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            renderCart();
+        }
+
+        // Render cart
+        function renderCart() {
+            const cartItemsDiv = document.getElementById("cart-items");
+            cartItemsDiv.innerHTML = "";
+            let total = 0;
+
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                const cartItemDiv = document.createElement("div");
+                cartItemDiv.classList.add("cart-item");
+                cartItemDiv.innerHTML = `
+                    <span>${item.name} (x${item.quantity}) - ${item.price * item.quantity} points</span>
+                    <button onclick="removeFromCart(${item.id})">Remove</button>
+                `;
+                cartItemsDiv.appendChild(cartItemDiv);
+            });
+
+            document.getElementById("cart-total").innerHTML = `<strong>Total: ${total} points</strong>`;
+        }
+
+        // Checkout
+        function checkout() {
+            const totalCost = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+
+            if (userBalance >= totalCost) {
+                userBalance -= totalCost;
+                cart = [];
+                saveCart();
+                localStorage.setItem('userBalance', userBalance);
+                renderCart();
+                alert("Checkout successful!");
+            } else {
+                alert("Insufficient balance!");
+            }
+        }
+
+        // Recharge user balance (admin function)
+        function rechargeBalance() {
+            const amount = parseFloat(document.getElementById("recharge-amount").value);
+            if (amount > 0) {
+                userBalance += amount;
+                localStorage.setItem('userBalance', userBalance);
+                alert("Balance recharged successfully!");
+            } else {
+                alert("Invalid amount.");
+            }
+        }
+
+        // Add a new product (admin function)
+        function addNewProduct() {
+            const name = document.getElementById("new-product-name").value;
+            const category = document.getElementById("new-product-category").value;
+            const price = parseFloat(document.getElementById("new-product-price").value);
+            const image = URL.createObjectURL(document.getElementById("new-product-image").files[0]);
+
+            const newProduct = {
+                id: products.length + 1,
+                name,
+                category,
+                price,
+                image,
+                description: "A new product"
+            };
+
+            products.push(newProduct);
+            localStorage.setItem('products', JSON.stringify(products));
+            renderProducts();
+            alert("Product added successfully!");
+        }
+
+        // Add a review for a product
+        function addReview() {
+            const reviewText = document.getElementById("review-text").value;
+            if (reviewText) {
+                reviews.push({ text: reviewText, timestamp: new Date() });
+                localStorage.setItem('reviews', JSON.stringify(reviews));
+                renderReviews();
+                alert("Review added successfully!");
+            } else {
+                alert("Please write a review.");
+            }
+        }
+
+        // Render reviews
+        function renderReviews() {
+            const reviewsDiv = document.getElementById("reviews");
+            reviewsDiv.innerHTML = "";
+            reviews.forEach(review => {
+                const reviewDiv = document.createElement("div");
+                reviewDiv.classList.add("review");
+                reviewDiv.innerHTML = `
+                    <p>${review.text}</p>
+                    <small>${new Date(review.timestamp).toLocaleString()}</small>
+                `;
+                reviewsDiv.appendChild(reviewDiv);
+            });
+        }
+
+        // Admin login
+        function loginAdmin() {
+            const username = document.getElementById("junior_duro").value;
+            const password = document.getElementById("Aranvir2009!").value;
+
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("admin-section").style.display = "block";
+                alert("Admin login successful.");
+            } else {
+                alert("Invalid credentials.");
+            }
+        }
+
+        // Save cart to localStorage
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        renderProducts();
+        renderCart();
+        renderReviews();
+    </script>
+</body>
+</html>
